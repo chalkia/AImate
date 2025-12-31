@@ -213,21 +213,36 @@ Teacher Instruction: ${config.instruction}
                     setCurrentImage(null);
                 }
 
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.apiKey}`, {
+                // HELPER: AI Request wrapper to handle Model Fallback
+                const fetchAI = async (modelName) => {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${config.apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts }] })
                     });
-                    
                     const data = await res.json();
-                    
-                    // --- ΕΔΩ ΕΙΝΑΙ Η ΔΙΟΡΘΩΣΗ ΓΙΑ ΝΑ ΔΟΥΜΕ ΤΟ ERROR ---
-                    if (data.error) {
-                        throw new Error(`Gemini API Error: ${data.error.message} (Code: ${data.error.code})`);
+                    if (data.error) throw data.error;
+                    return data;
+                };
+
+                try {
+                    let data;
+                    try {
+                        // 1. Try with the standard Flash model
+                        data = await fetchAI('gemini-1.5-flash-latest');
+                    } catch (err) {
+                        // 2. If it fails (404 Not Found), try fallback to Flash 001
+                        console.warn("Primary model failed, trying fallback...", err);
+                        try {
+                            data = await fetchAI('gemini-1.5-flash-001');
+                        } catch (err2) {
+                             // 3. Ultimate Fallback: Gemini Pro (older but reliable)
+                             console.warn("Flash fallback failed, trying Pro...", err2);
+                             data = await fetchAI('gemini-pro');
+                        }
                     }
-                    if (!data.candidates) throw new Error("API Error: No response candidates returned.");
-                    // ---------------------------------------------------
+
+                    if (!data || !data.candidates) throw new Error("API Error: No response candidates returned.");
 
                     const aiText = data.candidates[0].content.parts[0].text;
                     let detectedTag = aiText.includes("[TYPE: NEW_TOPIC]") ? "NEW_TOPIC" : (aiText.includes("[TYPE: FOLLOW_UP]") ? "FOLLOW_UP" : "UNKNOWN");
@@ -248,7 +263,7 @@ Teacher Instruction: ${config.instruction}
 
                 } catch (e) {
                     setTokens(tokens); // Revert token if error
-                    alert("Σφάλμα AI: " + e.message); 
+                    alert("Σφάλμα AI: " + (e.message || JSON.stringify(e))); 
                 } finally {
                     setLoading(false);
                 }
