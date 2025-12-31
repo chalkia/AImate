@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI Mate</title>
     
-    <!-- React & Tailwind -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -30,7 +29,6 @@
         const IconCamera = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>;
         const IconImage = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
 
-        // --- API HELPER ---
         const callBackend = async (url, action, payload) => {
             if (!url) throw new Error("Ο Server URL δεν έχει ρυθμιστεί από τον Admin.");
             const response = await fetch(url, {
@@ -62,9 +60,6 @@ Teacher Instruction: ${config.instruction}
 --- SYSTEM INSTRUCTIONS END ---
 `;
 
-        // ==========================================
-        // COMPONENT: LANDING PAGE
-        // ==========================================
         const LandingPage = ({ onSelectMode }) => (
             <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-6 relative">
                 <h1 className="text-4xl font-bold mb-8 text-center">AI Mate</h1>
@@ -76,17 +71,12 @@ Teacher Instruction: ${config.instruction}
                         <IconTeacher /> Είμαι Εκπαιδευτικός
                     </button>
                 </div>
-                
-                {/* Admin Button (Bottom Right) */}
                 <button onClick={() => onSelectMode('admin')} className="absolute bottom-4 right-4 text-xs text-blue-200 hover:text-white flex items-center gap-1 opacity-70">
                     <IconAdmin /> Admin
                 </button>
             </div>
         );
 
-        // ==========================================
-        // COMPONENT: ADMIN DASHBOARD
-        // ==========================================
         const AdminDashboard = ({ onBack }) => {
             const [password, setPassword] = useState('');
             const [isAuth, setIsAuth] = useState(false);
@@ -94,153 +84,49 @@ Teacher Instruction: ${config.instruction}
             const [apiKey, setApiKey] = useState('');
             const [loading, setLoading] = useState(false);
 
-            const handleLogin = () => {
-                if (password === 'admin123') setIsAuth(true); // Simple client-side check
-                else alert("Λάθος κωδικός");
-            };
+            const handleLogin = () => { if (password === 'admin123') setIsAuth(true); else alert("Λάθος κωδικός"); };
 
             const handleSaveConfig = async () => {
                 if (!backendUrl) return alert("Το URL είναι υποχρεωτικό");
-                // 1. Save URL locally (so Teacher/Student on THIS device know where to connect)
                 localStorage.setItem('steam_backend_url', backendUrl);
-                
-                // 2. Send API Key to Backend (if provided)
                 if (apiKey) {
                     setLoading(true);
                     try {
                         await callBackend(backendUrl, 'SETUP_CONFIG', { apiKey });
                         alert("Οι ρυθμίσεις αποθηκεύτηκαν επιτυχώς!");
-                    } catch (e) {
-                        alert("Σφάλμα αποθήκευσης στο Sheet: " + e.message);
-                    } finally {
-                        setLoading(false);
-                    }
-                } else {
-                    alert("Το URL αποθηκεύτηκε τοπικά.");
-                }
+                    } catch (e) { alert("Σφάλμα αποθήκευσης στο Sheet: " + e.message); } finally { setLoading(false); }
+                } else { alert("Το URL αποθηκεύτηκε τοπικά."); }
             };
 
             if (!isAuth) return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-100">
-                    <div className="bg-white p-6 rounded shadow-md">
-                        <h2 className="mb-4 font-bold">Admin Login (AI Mate)</h2>
-                        <input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="border p-2 w-full mb-4" placeholder="Password"/>
-                        <button onClick={handleLogin} className="bg-gray-800 text-white w-full p-2 rounded">Login</button>
-                        <button onClick={onBack} className="text-sm text-gray-500 mt-2 w-full">Back</button>
-                    </div>
-                </div>
+                <div className="min-h-screen flex items-center justify-center bg-gray-100"><div className="bg-white p-6 rounded shadow-md"><h2 className="mb-4 font-bold">Admin Login (AI Mate)</h2><input type="password" value={password} onChange={e=>setPassword(e.target.value)} className="border p-2 w-full mb-4" placeholder="Password"/><button onClick={handleLogin} className="bg-gray-800 text-white w-full p-2 rounded">Login</button><button onClick={onBack} className="text-sm text-gray-500 mt-2 w-full">Back</button></div></div>
             );
 
             return (
-                <div className="min-h-screen bg-gray-50 p-6">
-                    <button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button>
-                    <div className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto">
-                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconAdmin/> Διαχείριση AI Mate</h2>
-                        
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-xs font-bold text-gray-500">Google Script Web App URL</label>
-                                <p className="text-[10px] text-gray-400 mb-1">Αυτό το URL αποθηκεύεται στον Browser αυτής της συσκευής.</p>
-                                <input type="text" value={backendUrl} onChange={e => setBackendUrl(e.target.value)} className="w-full p-2 border rounded text-xs font-mono" placeholder="https://script.google.com/..." />
-                            </div>
-                            
-                            <div className="pt-4 border-t">
-                                <label className="text-xs font-bold text-gray-500">Gemini API Key</label>
-                                <p className="text-[10px] text-gray-400 mb-1">Αυτό το κλειδί θα σταλεί και θα αποθηκευτεί κρυφά στο Google Sheet (Config).</p>
-                                <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="AIzaSy..." />
-                            </div>
-
-                            <button onClick={handleSaveConfig} disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition">
-                                {loading ? 'Αποθήκευση...' : 'Αποθήκευση Ρυθμίσεων'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <div className="min-h-screen bg-gray-50 p-6"><button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button><div className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto"><h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconAdmin/> Διαχείριση AI Mate</h2><div className="space-y-4"><div><label className="text-xs font-bold text-gray-500">Google Script Web App URL</label><input type="text" value={backendUrl} onChange={e => setBackendUrl(e.target.value)} className="w-full p-2 border rounded text-xs font-mono" /></div><div className="pt-4 border-t"><label className="text-xs font-bold text-gray-500">Gemini API Key</label><input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} className="w-full p-2 border rounded text-xs" /></div><button onClick={handleSaveConfig} disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition">{loading ? 'Αποθήκευση...' : 'Αποθήκευση Ρυθμίσεων'}</button></div></div></div>
             );
         };
 
-        // ==========================================
-        // COMPONENT: TEACHER DASHBOARD
-        // ==========================================
         const TeacherDashboard = ({ onBack }) => {
             const backendUrl = localStorage.getItem('steam_backend_url');
-            const [formData, setFormData] = useState({
-                topic: 'Φυσική: Ηλεκτρικά Κυκλώματα',
-                instruction: 'Να είσαι ενθαρρυντικός και μαιευτικός.',
-                maxTokens: 5,
-                timeout: 180,
-                maxImages: 2
-            });
+            const [formData, setFormData] = useState({ topic: 'Φυσική: Ηλεκτρικά Κυκλώματα', instruction: 'Να είσαι ενθαρρυντικός και μαιευτικός.', maxTokens: 5, timeout: 180, maxImages: 2 });
             const [loading, setLoading] = useState(false);
             const [createdCode, setCreatedCode] = useState(null);
 
             const handleCreate = async () => {
-                if (!backendUrl) return alert("Το σύστημα δεν έχει ρυθμιστεί από τον Admin (Λείπει το URL).");
+                if (!backendUrl) return alert("Το σύστημα δεν έχει ρυθμιστεί από τον Admin.");
                 setLoading(true);
                 try {
                     const data = await callBackend(backendUrl, 'CREATE_SESSION', formData);
                     setCreatedCode(data.code);
-                } catch (e) {
-                    alert("Σφάλμα: " + e.message);
-                } finally {
-                    setLoading(false);
-                }
+                } catch (e) { alert("Σφάλμα: " + e.message); } finally { setLoading(false); }
             };
 
             return (
-                <div className="min-h-screen bg-gray-50 p-6">
-                    <button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button>
-                    <h2 className="text-2xl font-bold mb-6 text-gray-800">Πάνελ Εκπαιδευτικού</h2>
-                    
-                    {!createdCode ? (
-                        <div className="bg-white p-6 rounded-xl shadow-md space-y-4 max-w-lg mx-auto">
-                            {!backendUrl && <div className="text-red-500 text-sm font-bold bg-red-50 p-2 rounded">Προσοχή: Ο Admin δεν έχει ορίσει το Server URL.</div>}
-                            
-                            <h3 className="font-bold border-b pb-2">Ρυθμίσεις Συνεδρίας</h3>
-                            <div>
-                                <label className="text-xs font-bold text-gray-500">Θέμα (Topic)</label>
-                                <input type="text" value={formData.topic} onChange={e => setFormData({...formData, topic: e.target.value})} className="w-full p-2 border rounded" />
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-gray-500">Οδηγίες (Instructions)</label>
-                                <textarea value={formData.instruction} onChange={e => setFormData({...formData, instruction: e.target.value})} className="w-full p-2 border rounded h-20" />
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">Tokens</label>
-                                    <input type="number" value={formData.maxTokens} onChange={e => setFormData({...formData, maxTokens: e.target.value})} className="w-full p-2 border rounded" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">Timeout(s)</label>
-                                    <input type="number" value={formData.timeout} onChange={e => setFormData({...formData, timeout: e.target.value})} className="w-full p-2 border rounded" />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-500">Images</label>
-                                    <input type="number" value={formData.maxImages} onChange={e => setFormData({...formData, maxImages: e.target.value})} className="w-full p-2 border rounded" />
-                                </div>
-                            </div>
-
-                            <button onClick={handleCreate} disabled={loading || !backendUrl} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition disabled:bg-gray-400">
-                                {loading ? 'Δημιουργία...' : 'Δημιουργία Κωδικού Συνεδρίας'}
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md mx-auto animate-fadeIn">
-                            <div className="text-green-500 mb-4 mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-green-100">✓</div>
-                            <h3 className="text-xl font-bold mb-2">Η Συνεδρία Δημιουργήθηκε!</h3>
-                            <div className="text-5xl font-mono font-bold text-blue-600 tracking-widest mb-8 bg-blue-50 p-4 rounded-lg select-all">
-                                {createdCode}
-                            </div>
-                            <button onClick={() => setCreatedCode(null)} className="text-blue-600 font-bold underline">Δημιουργία Νέας</button>
-                        </div>
-                    )}
-                </div>
+                <div className="min-h-screen bg-gray-50 p-6"><button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button><h2 className="text-2xl font-bold mb-6 text-gray-800">Πάνελ Εκπαιδευτικού</h2>{!createdCode ? (<div className="bg-white p-6 rounded-xl shadow-md space-y-4 max-w-lg mx-auto">{!backendUrl && <div className="text-red-500 text-sm font-bold bg-red-50 p-2 rounded">Προσοχή: Ο Admin δεν έχει ορίσει το Server URL.</div>}<h3 className="font-bold border-b pb-2">Ρυθμίσεις Συνεδρίας</h3><div><label className="text-xs font-bold text-gray-500">Θέμα (Topic)</label><input type="text" value={formData.topic} onChange={e => setFormData({...formData, topic: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Οδηγίες (Instructions)</label><textarea value={formData.instruction} onChange={e => setFormData({...formData, instruction: e.target.value})} className="w-full p-2 border rounded h-20" /></div><div className="grid grid-cols-3 gap-2"><div><label className="text-xs font-bold text-gray-500">Tokens</label><input type="number" value={formData.maxTokens} onChange={e => setFormData({...formData, maxTokens: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Timeout(s)</label><input type="number" value={formData.timeout} onChange={e => setFormData({...formData, timeout: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Images</label><input type="number" value={formData.maxImages} onChange={e => setFormData({...formData, maxImages: e.target.value})} className="w-full p-2 border rounded" /></div></div><button onClick={handleCreate} disabled={loading || !backendUrl} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition disabled:bg-gray-400">{loading ? 'Δημιουργία...' : 'Δημιουργία Κωδικού Συνεδρίας'}</button></div>) : (<div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md mx-auto animate-fadeIn"><div className="text-green-500 mb-4 mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-green-100">✓</div><h3 className="text-xl font-bold mb-2">Η Συνεδρία Δημιουργήθηκε!</h3><div className="text-5xl font-mono font-bold text-blue-600 tracking-widest mb-8 bg-blue-50 p-4 rounded-lg select-all">{createdCode}</div><button onClick={() => setCreatedCode(null)} className="text-blue-600 font-bold underline">Δημιουργία Νέας</button></div>)}</div>
             );
         };
 
-        // ==========================================
-        // COMPONENT: STUDENT LOGIN
-        // ==========================================
         const StudentLogin = ({ onBack, onLogin }) => {
             const [code, setCode] = useState('');
             const [manualUrl, setManualUrl] = useState(localStorage.getItem('steam_backend_url') || '');
@@ -250,44 +136,16 @@ Teacher Instruction: ${config.instruction}
                 if (!code || !manualUrl) return alert("Συμπληρώστε Κωδικό και Server URL");
                 setLoading(true);
                 try {
-                    // Get Session Data AND the API Key from Backend
                     const sessionData = await callBackend(manualUrl, 'GET_SESSION', { code });
                     onLogin({ ...sessionData, sessionCode: code, backendUrl: manualUrl }); 
-                } catch (e) {
-                    alert("Αποτυχία σύνδεσης: " + e.message);
-                } finally {
-                    setLoading(false);
-                }
+                } catch (e) { alert("Αποτυχία σύνδεσης: " + e.message); } finally { setLoading(false); }
             };
 
             return (
-                <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
-                    <button onClick={onBack} className="absolute top-6 left-6 text-blue-600 font-bold">← Πίσω</button>
-                    <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm">
-                        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Είσοδος Ομάδας</h2>
-                        
-                        <div className="space-y-4">
-                             <div>
-                                <label className="text-xs font-bold text-gray-500 uppercase">Server URL</label>
-                                <input type="text" value={manualUrl} onChange={e => setManualUrl(e.target.value)} className="w-full p-3 border rounded-lg bg-gray-50 text-xs" placeholder="https://..." />
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-gray-500 uppercase">Κωδικός Συνεδρίας</label>
-                                <input type="text" value={code} onChange={e => setCode(e.target.value)} className="w-full p-4 border-2 border-blue-100 rounded-lg text-center text-3xl font-mono tracking-widest focus:border-blue-500 outline-none" placeholder="000000" maxLength="6" />
-                            </div>
-
-                            <button onClick={handleLogin} disabled={loading} className="w-full bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg mt-4">
-                                {loading ? 'Σύνδεση...' : 'Είσοδος στο AI Mate'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6"><button onClick={onBack} className="absolute top-6 left-6 text-blue-600 font-bold">← Πίσω</button><div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm"><h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Είσοδος Ομάδας</h2><div className="space-y-4"><div><label className="text-xs font-bold text-gray-500 uppercase">Server URL</label><input type="text" value={manualUrl} onChange={e => setManualUrl(e.target.value)} className="w-full p-3 border rounded-lg bg-gray-50 text-xs" placeholder="https://..." /></div><div><label className="text-xs font-bold text-gray-500 uppercase">Κωδικός Συνεδρίας</label><input type="text" value={code} onChange={e => setCode(e.target.value)} className="w-full p-4 border-2 border-blue-100 rounded-lg text-center text-3xl font-mono tracking-widest focus:border-blue-500 outline-none" placeholder="000000" maxLength="6" /></div><button onClick={handleLogin} disabled={loading} className="w-full bg-blue-600 text-white py-4 rounded-lg font-bold hover:bg-blue-700 transition shadow-lg mt-4">{loading ? 'Σύνδεση...' : 'Είσοδος στο AI Mate'}</button></div></div></div>
             );
         };
 
-        // ==========================================
-        // COMPONENT: CHAT SESSION (Core)
-        // ==========================================
         const ChatSession = ({ config, onExit }) => {
             const [messages, setMessages] = useState([{ role: 'ai', text: `Γεια σας ομάδα! Είμαι ο AI Mate. Θέμα σήμερα: ${config.topic}. Πώς μπορώ να βοηθήσω;` }]);
             const [input, setInput] = useState('');
@@ -306,9 +164,7 @@ Teacher Instruction: ${config.instruction}
             useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
             useEffect(() => {
                 let interval;
-                if (isThinking && timer > 0) {
-                    interval = setInterval(() => setTimer(prev => prev - 1), 1000);
-                } else if (timer === 0 && isThinking) setIsThinking(false);
+                if (isThinking && timer > 0) { interval = setInterval(() => setTimer(prev => prev - 1), 1000); } else if (timer === 0 && isThinking) setIsThinking(false);
                 return () => clearInterval(interval);
             }, [isThinking, timer]);
 
@@ -332,7 +188,6 @@ Teacher Instruction: ${config.instruction}
 
             const handleSend = async () => {
                 if (!input.trim() || !effort.trim()) return alert("Συμπληρώστε ερώτηση και προσπάθεια.");
-                
                 let tempTokens = tokens;
                 if (tempTokens <= 0 && !isFollowUpActive) return alert("Τέλος Tokens.");
                 if (!isFollowUpActive) { tempTokens -= 1; setTokens(tempTokens); }
@@ -359,14 +214,20 @@ Teacher Instruction: ${config.instruction}
                 }
 
                 try {
-                    // Call Gemini using the API KEY retrieved from the Backend Session
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${config.apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts }] })
                     });
+                    
                     const data = await res.json();
-                    if (!data.candidates) throw new Error("API Error");
+                    
+                    // --- ΕΔΩ ΕΙΝΑΙ Η ΔΙΟΡΘΩΣΗ ΓΙΑ ΝΑ ΔΟΥΜΕ ΤΟ ERROR ---
+                    if (data.error) {
+                        throw new Error(`Gemini API Error: ${data.error.message} (Code: ${data.error.code})`);
+                    }
+                    if (!data.candidates) throw new Error("API Error: No response candidates returned.");
+                    // ---------------------------------------------------
 
                     const aiText = data.candidates[0].content.parts[0].text;
                     let detectedTag = aiText.includes("[TYPE: NEW_TOPIC]") ? "NEW_TOPIC" : (aiText.includes("[TYPE: FOLLOW_UP]") ? "FOLLOW_UP" : "UNKNOWN");
@@ -386,53 +247,15 @@ Teacher Instruction: ${config.instruction}
                     } else setIsFollowUpActive(true);
 
                 } catch (e) {
-                    alert("Σφάλμα AI: " + e.message);
+                    setTokens(tokens); // Revert token if error
+                    alert("Σφάλμα AI: " + e.message); 
                 } finally {
                     setLoading(false);
                 }
             };
 
             return (
-                <div className="flex flex-col h-screen bg-white">
-                    <div className="bg-white p-3 shadow-sm flex justify-between items-center z-10 sticky top-0 border-b">
-                        <div>
-                            <h1 className="font-bold text-blue-600">AI Mate: {config.sessionCode}</h1>
-                            <div className="text-xs text-gray-500 flex gap-2">
-                                <span className={isFollowUpActive ? 'text-green-600 font-bold' : ''}>Tokens: {tokens}/{config.maxTokens}</span>
-                                <span>Img: {imagesSent}/{config.maxImages}</span>
-                            </div>
-                        </div>
-                        <button onClick={onExit} className="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Έξοδος</button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32 bg-gray-50">
-                        {messages.map((msg, idx) => (
-                            <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fadeIn`}>
-                                {msg.role === 'user' && <span className="text-[10px] text-gray-400 mb-1 mr-1">Effort: {msg.effort.substring(0,15)}...</span>}
-                                <div className={`max-w-[85%] p-3 rounded-2xl whitespace-pre-wrap shadow-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-200 rounded-bl-none text-sm'}`}>
-                                    {msg.image && <img src={msg.image} className="mb-2 rounded-lg max-h-40 w-full object-cover"/>}
-                                    {msg.text}
-                                </div>
-                            </div>
-                        ))}
-                        {loading && <div className="text-gray-400 text-xs ml-4 animate-pulse">Thinking...</div>}
-                        <div ref={chatEndRef}></div>
-                    </div>
-                    {isThinking && <div className="fixed bottom-0 w-full bg-orange-100 p-4 text-center text-orange-800 font-bold border-t border-orange-300 z-50 pb-8">⏳ Ώρα για σκέψη! ({timer}s)</div>}
-                    {!isThinking && (
-                        <div className="fixed bottom-0 w-full bg-white p-3 border-t z-40">
-                            <div className="max-w-lg mx-auto flex flex-col gap-2">
-                                {isFollowUpActive && <div className="text-center text-xs text-green-600 font-bold bg-green-50 py-1 rounded">✨ Διευκρινιστική Ερώτηση (Δωρεάν)</div>}
-                                <input type="text" placeholder="Τι δοκιμάσατε μέχρι τώρα;" value={effort} onChange={e => setEffort(e.target.value)} className="w-full text-xs p-2 bg-gray-50 border rounded" />
-                                <div className="flex gap-2 items-center">
-                                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                                    <button onClick={() => fileInputRef.current.click()} className={`p-3 rounded-full ${currentImage ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>{currentImage ? <IconImage/> : <IconCamera/>}</button>
-                                    <input type="text" placeholder="Η ερώτησή σας..." value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} className="flex-1 p-3 bg-gray-50 border rounded-full focus:outline-none focus:border-blue-400" />
-                                    <button onClick={handleSend} disabled={loading} className="p-3 bg-blue-600 text-white rounded-full"><IconSend/></button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                <div className="flex flex-col h-screen bg-white"><div className="bg-white p-3 shadow-sm flex justify-between items-center z-10 sticky top-0 border-b"><div><h1 className="font-bold text-blue-600">AI Mate: {config.sessionCode}</h1><div className="text-xs text-gray-500 flex gap-2"><span className={isFollowUpActive ? 'text-green-600 font-bold' : ''}>Tokens: {tokens}/{config.maxTokens}</span><span>Img: {imagesSent}/{config.maxImages}</span></div></div><button onClick={onExit} className="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300">Έξοδος</button></div><div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32 bg-gray-50">{messages.map((msg, idx) => (<div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fadeIn`}>{msg.role === 'user' && <span className="text-[10px] text-gray-400 mb-1 mr-1">Effort: {msg.effort.substring(0,15)}...</span>}<div className={`max-w-[85%] p-3 rounded-2xl whitespace-pre-wrap shadow-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-200 rounded-bl-none text-sm'}`}>{msg.image && <img src={msg.image} className="mb-2 rounded-lg max-h-40 w-full object-cover"/>}{msg.text}</div></div>))}{loading && <div className="text-gray-400 text-xs ml-4 animate-pulse">Thinking...</div>}<div ref={chatEndRef}></div></div>{isThinking && <div className="fixed bottom-0 w-full bg-orange-100 p-4 text-center text-orange-800 font-bold border-t border-orange-300 z-50 pb-8">⏳ Ώρα για σκέψη! ({timer}s)</div>}{!isThinking && (<div className="fixed bottom-0 w-full bg-white p-3 border-t z-40"><div className="max-w-lg mx-auto flex flex-col gap-2">{isFollowUpActive && <div className="text-center text-xs text-green-600 font-bold bg-green-50 py-1 rounded">✨ Διευκρινιστική Ερώτηση (Δωρεάν)</div>}<input type="text" placeholder="Τι δοκιμάσατε μέχρι τώρα;" value={effort} onChange={e => setEffort(e.target.value)} className="w-full text-xs p-2 bg-gray-50 border rounded" /><div className="flex gap-2 items-center"><input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} /><button onClick={() => fileInputRef.current.click()} className={`p-3 rounded-full ${currentImage ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>{currentImage ? <IconImage/> : <IconCamera/>}</button><input type="text" placeholder="Η ερώτησή σας..." value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} className="flex-1 p-3 bg-gray-50 border rounded-full focus:outline-none focus:border-blue-400" /><button onClick={handleSend} disabled={loading} className="p-3 bg-blue-600 text-white rounded-full"><IconSend/></button></div></div></div>)}</div>
             );
         };
 
@@ -440,13 +263,7 @@ Teacher Instruction: ${config.instruction}
             const [view, setView] = useState('landing');
             const [sessionConfig, setSessionConfig] = useState(null);
             return (
-                <>
-                    {view === 'landing' && <LandingPage onSelectMode={(mode) => setView(mode)} />}
-                    {view === 'admin' && <AdminDashboard onBack={() => setView('landing')} />}
-                    {view === 'teacher' && <TeacherDashboard onBack={() => setView('landing')} />}
-                    {view === 'student' && <StudentLogin onBack={() => setView('landing')} onLogin={(cfg) => { setSessionConfig(cfg); setView('chat'); }} />}
-                    {view === 'chat' && <ChatSession config={sessionConfig} onExit={() => setView('landing')} />}
-                </>
+                <>{view === 'landing' && <LandingPage onSelectMode={(mode) => setView(mode)} />}{view === 'admin' && <AdminDashboard onBack={() => setView('landing')} />}{view === 'teacher' && <TeacherDashboard onBack={() => setView('landing')} />}{view === 'student' && <StudentLogin onBack={() => setView('landing')} onLogin={(cfg) => { setSessionConfig(cfg); setView('chat'); }} />}{view === 'chat' && <ChatSession config={sessionConfig} onExit={() => setView('landing')} />}</>
             );
         };
 
