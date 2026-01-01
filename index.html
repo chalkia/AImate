@@ -21,6 +21,11 @@
     <script type="text/babel">
         const { useState, useRef, useEffect } = React;
 
+        // --- ΡΥΘΜΙΣΗ ΓΙΑ ΜΟΝΙΜΗ ΣΥΝΔΕΣΗ ---
+        // Βάλτε το Google Script Web App URL εδώ (μέσα στα εισαγωγικά) για να μην το γράφετε κάθε φορά.
+        // Παράδειγμα: const FIXED_SERVER_URL = "https://script.google.com/macros/s/AKfycbx.../exec";
+        const FIXED_SERVER_URL = "https://script.google.com/macros/s/AKfycbzjewUhI9tTtenpo8zy1xFMXrGrmZnhpqdm4Aqyx43NBKMwTMLKi6Kefs__PWUuTVzE/exec"; 
+
         // --- ICONS ---
         const IconUser = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>;
         const IconTeacher = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>;
@@ -28,10 +33,9 @@
         const IconSend = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
         const IconCamera = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>;
         const IconImage = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>;
-        const IconCheck = () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
 
         const callBackend = async (url, action, payload) => {
-            if (!url) throw new Error("Ο Server URL δεν έχει ρυθμιστεί από τον Admin.");
+            if (!url) throw new Error("Ο Server URL δεν έχει ρυθμιστεί. Βάλτε το στο FIXED_SERVER_URL ή στις ρυθμίσεις.");
             const response = await fetch(url, {
                 method: 'POST',
                 body: JSON.stringify({ action, ...payload })
@@ -81,7 +85,7 @@ Teacher Instruction: ${config.instruction}
         const AdminDashboard = ({ onBack }) => {
             const [password, setPassword] = useState('');
             const [isAuth, setIsAuth] = useState(false);
-            const [backendUrl, setBackendUrl] = useState(localStorage.getItem('steam_backend_url') || '');
+            const [backendUrl, setBackendUrl] = useState(FIXED_SERVER_URL || localStorage.getItem('steam_backend_url') || '');
             const [apiKey, setApiKey] = useState('');
             const [loading, setLoading] = useState(false);
             const [testStatus, setTestStatus] = useState(null);
@@ -95,17 +99,16 @@ Teacher Instruction: ${config.instruction}
                     setLoading(true);
                     try {
                         await callBackend(backendUrl, 'SETUP_CONFIG', { apiKey });
-                        alert("Οι ρυθμίσεις αποθηκεύτηκαν επιτυχώς!");
-                    } catch (e) { alert("Σφάλμα αποθήκευσης στο Sheet: " + e.message); } finally { setLoading(false); }
-                } else { alert("Το URL αποθηκεύτηκε τοπικά."); }
+                        alert("Επιτυχία! Το κλειδί αποθηκεύτηκε στο Google Sheet.");
+                    } catch (e) { alert("Σφάλμα: " + e.message); } finally { setLoading(false); }
+                } else { alert("Το URL αποθηκεύτηκε τοπικά. Το κλειδί παρέμεινε ως είχε στο Cloud."); }
             };
 
             const handleTestConnection = async () => {
-                if (!apiKey) return alert("Βάλε πρώτα το κλειδί στο πεδίο!");
+                if (!apiKey) return alert("Για δοκιμή, συμπληρώστε πρώτα το κλειδί στο πεδίο.");
                 setLoading(true);
                 setTestStatus("Δοκιμή...");
                 try {
-                    // Try the preferred model directly to test key validity
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -113,11 +116,11 @@ Teacher Instruction: ${config.instruction}
                     });
                     const data = await res.json();
                     if (data.error) throw new Error(data.error.message);
-                    setTestStatus("✅ Επιτυχία! Το Gemini απάντησε.");
+                    setTestStatus("✅ Το Κλειδί Λειτουργεί!");
                     alert("✅ Επιτυχία! Το Gemini απάντησε: " + data.candidates[0].content.parts[0].text);
                 } catch (e) {
                     setTestStatus("❌ Σφάλμα");
-                    alert("❌ Αποτυχία Σύνδεσης: " + e.message);
+                    alert("❌ Αποτυχία: " + e.message);
                 } finally {
                     setLoading(false);
                 }
@@ -128,18 +131,18 @@ Teacher Instruction: ${config.instruction}
             );
 
             return (
-                <div className="min-h-screen bg-gray-50 p-6"><button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button><div className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto"><h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconAdmin/> Διαχείριση AI Mate</h2><div className="space-y-4"><div><label className="text-xs font-bold text-gray-500">Google Script Web App URL</label><input type="text" value={backendUrl} onChange={e => setBackendUrl(e.target.value)} className="w-full p-2 border rounded text-xs font-mono" /></div><div className="pt-4 border-t"><label className="text-xs font-bold text-gray-500">Gemini API Key</label><div className="flex gap-2"><input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} className="w-full p-2 border rounded text-xs" /><button onClick={handleTestConnection} className="bg-gray-200 text-xs px-3 rounded hover:bg-gray-300 whitespace-nowrap">Δοκιμή Κλειδιού</button></div>{testStatus && <p className="text-xs mt-1 text-right font-bold">{testStatus}</p>}</div><button onClick={handleSaveConfig} disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition">{loading ? 'Αποθήκευση...' : 'Αποθήκευση Ρυθμίσεων'}</button></div></div></div>
+                <div className="min-h-screen bg-gray-50 p-6"><button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button><div className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto"><h2 className="text-xl font-bold mb-4 flex items-center gap-2"><IconAdmin/> Διαχείριση AI Mate</h2><div className="space-y-4"><div><label className="text-xs font-bold text-gray-500">Google Script Web App URL</label><input type="text" value={backendUrl} onChange={e => setBackendUrl(e.target.value)} className="w-full p-2 border rounded text-xs font-mono" placeholder="https://script.google.com/..." />{FIXED_SERVER_URL && <p className="text-[10px] text-green-600 mt-1">✅ Έχει οριστεί μόνιμα στον κώδικα.</p>}</div><div className="pt-4 border-t"><label className="text-xs font-bold text-gray-500">Gemini API Key</label><p className="text-[10px] text-gray-400 mb-1">Αφήστε κενό αν δεν θέλετε να το αλλάξετε. Είναι ήδη αποθηκευμένο στο Sheet.</p><div className="flex gap-2"><input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} className="w-full p-2 border rounded text-xs" placeholder="Εισάγετε νέο κλειδί μόνο αν χρειάζεται..." /><button onClick={handleTestConnection} className="bg-gray-200 text-xs px-3 rounded hover:bg-gray-300 whitespace-nowrap">Test Key</button></div>{testStatus && <p className="text-xs mt-1 text-right font-bold">{testStatus}</p>}</div><button onClick={handleSaveConfig} disabled={loading} className="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700 transition">{loading ? 'Αποθήκευση...' : 'Αποθήκευση Ρυθμίσεων'}</button></div></div></div>
             );
         };
 
         const TeacherDashboard = ({ onBack }) => {
-            const backendUrl = localStorage.getItem('steam_backend_url');
+            const backendUrl = FIXED_SERVER_URL || localStorage.getItem('steam_backend_url');
             const [formData, setFormData] = useState({ topic: 'Φυσική: Ηλεκτρικά Κυκλώματα', instruction: 'Να είσαι ενθαρρυντικός και μαιευτικός.', maxTokens: 5, timeout: 180, maxImages: 2 });
             const [loading, setLoading] = useState(false);
             const [createdCode, setCreatedCode] = useState(null);
 
             const handleCreate = async () => {
-                if (!backendUrl) return alert("Το σύστημα δεν έχει ρυθμιστεί από τον Admin.");
+                if (!backendUrl) return alert("Δεν βρέθηκε URL συστήματος. Επικοινωνήστε με τον Admin.");
                 setLoading(true);
                 try {
                     const data = await callBackend(backendUrl, 'CREATE_SESSION', formData);
@@ -148,17 +151,17 @@ Teacher Instruction: ${config.instruction}
             };
 
             return (
-                <div className="min-h-screen bg-gray-50 p-6"><button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button><h2 className="text-2xl font-bold mb-6 text-gray-800">Πάνελ Εκπαιδευτικού</h2>{!createdCode ? (<div className="bg-white p-6 rounded-xl shadow-md space-y-4 max-w-lg mx-auto">{!backendUrl && <div className="text-red-500 text-sm font-bold bg-red-50 p-2 rounded">Προσοχή: Ο Admin δεν έχει ορίσει το Server URL.</div>}<h3 className="font-bold border-b pb-2">Ρυθμίσεις Συνεδρίας</h3><div><label className="text-xs font-bold text-gray-500">Θέμα (Topic)</label><input type="text" value={formData.topic} onChange={e => setFormData({...formData, topic: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Οδηγίες (Instructions)</label><textarea value={formData.instruction} onChange={e => setFormData({...formData, instruction: e.target.value})} className="w-full p-2 border rounded h-20" /></div><div className="grid grid-cols-3 gap-2"><div><label className="text-xs font-bold text-gray-500">Tokens</label><input type="number" value={formData.maxTokens} onChange={e => setFormData({...formData, maxTokens: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Timeout(s)</label><input type="number" value={formData.timeout} onChange={e => setFormData({...formData, timeout: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Images</label><input type="number" value={formData.maxImages} onChange={e => setFormData({...formData, maxImages: e.target.value})} className="w-full p-2 border rounded" /></div></div><button onClick={handleCreate} disabled={loading || !backendUrl} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition disabled:bg-gray-400">{loading ? 'Δημιουργία...' : 'Δημιουργία Κωδικού Συνεδρίας'}</button></div>) : (<div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md mx-auto animate-fadeIn"><div className="text-green-500 mb-4 mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-green-100">✓</div><h3 className="text-xl font-bold mb-2">Η Συνεδρία Δημιουργήθηκε!</h3><div className="text-5xl font-mono font-bold text-blue-600 tracking-widest mb-8 bg-blue-50 p-4 rounded-lg select-all">{createdCode}</div><button onClick={() => setCreatedCode(null)} className="text-blue-600 font-bold underline">Δημιουργία Νέας</button></div>)}</div>
+                <div className="min-h-screen bg-gray-50 p-6"><button onClick={onBack} className="mb-4 text-blue-600 font-bold">← Πίσω</button><h2 className="text-2xl font-bold mb-6 text-gray-800">Πάνελ Εκπαιδευτικού</h2>{!createdCode ? (<div className="bg-white p-6 rounded-xl shadow-md space-y-4 max-w-lg mx-auto">{!backendUrl && <div className="text-red-500 text-sm font-bold bg-red-50 p-2 rounded">Προσοχή: Λείπει το Server URL.</div>}<h3 className="font-bold border-b pb-2">Ρυθμίσεις Συνεδρίας</h3><div><label className="text-xs font-bold text-gray-500">Θέμα (Topic)</label><input type="text" value={formData.topic} onChange={e => setFormData({...formData, topic: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Οδηγίες (Instructions)</label><textarea value={formData.instruction} onChange={e => setFormData({...formData, instruction: e.target.value})} className="w-full p-2 border rounded h-20" /></div><div className="grid grid-cols-3 gap-2"><div><label className="text-xs font-bold text-gray-500">Tokens</label><input type="number" value={formData.maxTokens} onChange={e => setFormData({...formData, maxTokens: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Timeout(s)</label><input type="number" value={formData.timeout} onChange={e => setFormData({...formData, timeout: e.target.value})} className="w-full p-2 border rounded" /></div><div><label className="text-xs font-bold text-gray-500">Images</label><input type="number" value={formData.maxImages} onChange={e => setFormData({...formData, maxImages: e.target.value})} className="w-full p-2 border rounded" /></div></div><button onClick={handleCreate} disabled={loading || !backendUrl} className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition disabled:bg-gray-400">{loading ? 'Δημιουργία...' : 'Δημιουργία Κωδικού Συνεδρίας'}</button></div>) : (<div className="bg-white p-8 rounded-xl shadow-md text-center max-w-md mx-auto animate-fadeIn"><div className="text-green-500 mb-4 mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-green-100">✓</div><h3 className="text-xl font-bold mb-2">Η Συνεδρία Δημιουργήθηκε!</h3><div className="text-5xl font-mono font-bold text-blue-600 tracking-widest mb-8 bg-blue-50 p-4 rounded-lg select-all">{createdCode}</div><button onClick={() => setCreatedCode(null)} className="text-blue-600 font-bold underline">Δημιουργία Νέας</button></div>)}</div>
             );
         };
 
         const StudentLogin = ({ onBack, onLogin }) => {
             const [code, setCode] = useState('');
-            const [manualUrl, setManualUrl] = useState(localStorage.getItem('steam_backend_url') || '');
+            const [manualUrl, setManualUrl] = useState(FIXED_SERVER_URL || localStorage.getItem('steam_backend_url') || '');
             const [loading, setLoading] = useState(false);
 
             const handleLogin = async () => {
-                if (!code || !manualUrl) return alert("Συμπληρώστε Κωδικό και Server URL");
+                if (!code || !manualUrl) return alert("Συμπληρώστε τον Κωδικό Συνεδρίας.");
                 setLoading(true);
                 try {
                     const sessionData = await callBackend(manualUrl, 'GET_SESSION', { code });
@@ -238,7 +241,6 @@ Teacher Instruction: ${config.instruction}
                     setCurrentImage(null);
                 }
 
-                // HELPER: AI Request wrapper to handle Model Fallback
                 const fetchAI = async (modelName) => {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${config.apiKey}`, {
                         method: 'POST',
@@ -252,7 +254,6 @@ Teacher Instruction: ${config.instruction}
 
                 try {
                     let data;
-                    // UPDATED: New model list for 2026 contexts
                     const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
                     let lastError = null;
 
